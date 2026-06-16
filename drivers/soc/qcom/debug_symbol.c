@@ -26,7 +26,7 @@
 #include <linux/of_reserved_mem.h>
 #include <linux/kallsyms.h>
 #include "debug_symbol.h"
-#include "drivers/android/debug_kinfo.h"
+#include "../../android/debug_kinfo.h"
 
 struct debug_symbol_data {
 	const unsigned long *addresses;
@@ -84,7 +84,7 @@ bool debug_symbol_available(void)
 
 	if (!debug_symbol.addresses) {
 		debug_symbol.addresses = (unsigned long *)
-						__phys_to_kimg(kinfo->_text_pa);
+						__phys_to_kimg(kinfo->_stext_pa);
 		debug_symbol.offsets = (int *)
 						__phys_to_kimg(kinfo->_offsets_pa);
 		debug_symbol.names = (u8 *)
@@ -200,6 +200,10 @@ unsigned long debug_symbol_lookup_name(const char *name)
 
 	if (!*name)
 		return 0;
+
+	/* Fallback to kallsyms if debug_symbol is not available */
+	if (!debug_symbol_available())
+		return kallsyms_lookup_name(name);
 
 	ret = find_in_ds_entries(name);
 	if (ret)

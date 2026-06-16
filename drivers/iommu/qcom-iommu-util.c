@@ -17,7 +17,9 @@
 #include <linux/qcom-io-pgtable.h>
 #include "drivers/iommu/iommu-priv.h"
 #include <linux/xarray.h>
+#if IS_ENABLED(CONFIG_ANDROID_VENDOR_HOOKS)
 #include <trace/hooks/iommu.h>
+#endif
 #include "qcom-dma-iommu-generic.h"
 #include "qcom-io-pgtable-alloc.h"
 
@@ -823,10 +825,6 @@ out_undo:
 	}
 	return ret;
 }
-#if IS_MODULE(CONFIG_QCOM_IOMMU_UTIL)
 module_init(qcom_iommu_util_init);
-#else
-arch_initcall_sync(qcom_iommu_util_init);
-#endif
 
 MODULE_LICENSE("GPL");

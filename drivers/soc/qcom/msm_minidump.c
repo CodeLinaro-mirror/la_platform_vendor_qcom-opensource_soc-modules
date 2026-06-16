@@ -34,7 +34,7 @@ EXPORT_SYMBOL_GPL(md_init_done);
 
 static struct md_core md_core;
 
-DEFINE_SPINLOCK(mdt_lock);
+DEFINE_RAW_SPINLOCK(mdt_lock);
 
 unsigned int md_num_regions;
 EXPORT_SYMBOL_GPL(md_num_regions);
@@ -256,24 +256,24 @@ int msm_minidump_add_region(const struct md_region *entry)
 		 * add to pending list, need free after initialized
 		 */
 		pr_info("Minidump driver hasn't probe, add region to pending list\n");
-		spin_lock_irqsave(&mdt_lock, flags);
+		raw_spin_lock_irqsave(&mdt_lock, flags);
 
 		if (md_num_regions >= MAX_NUM_ENTRIES) {
 			printk_deferred("Maximum entries reached\n");
-			spin_unlock_irqrestore(&mdt_lock, flags);
+			raw_spin_unlock_irqrestore(&mdt_lock, flags);
 			return -ENOMEM;
 		}
 
 		pending_region = kzalloc(sizeof(*pending_region), GFP_ATOMIC);
 		if (!pending_region) {
-			spin_unlock_irqrestore(&mdt_lock, flags);
+			raw_spin_unlock_irqrestore(&mdt_lock, flags);
 			return -ENOMEM;
 		}
 		pending_region->entry = *entry;
 		list_add_tail(&pending_region->list, &pending_list);
 		ret = md_num_regions;
 		md_num_regions++;
-		spin_unlock_irqrestore(&mdt_lock, flags);
+		raw_spin_unlock_irqrestore(&mdt_lock, flags);
 	}
 
 	return ret;
@@ -312,6 +312,10 @@ static int msm_minidump_add_header(void)
 	char *banner, *linux_banner;
 
 	linux_banner = DEBUG_SYMBOL_LOOKUP(linux_banner);
+	if (!linux_banner) {
+		pr_warn("Minidump: linux_banner lookup failed, using fallback\n");
+		linux_banner = "Linux version unknown (debug_symbol not available)";
+	}
 	/* Header buffer contains:
 	 * elf header, MAX_NUM_ENTRIES+4 of section and program elf headers,
 	 * string table section and linux banner.
@@ -403,7 +407,7 @@ int msm_minidump_driver_probe(const struct md_init_data *data)
 	int ret = 0;
 
 	if (!debug_symbol_available())
-		return -EPROBE_DEFER;
+		pr_warn("Minidump: debug_symbol not available, symbol lookup will use kallsyms\n");
 
 	md_core.ops = data->ops;
 

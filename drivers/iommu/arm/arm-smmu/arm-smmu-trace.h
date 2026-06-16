@@ -28,7 +28,7 @@ DECLARE_EVENT_CLASS(iommu_tlbi,
 	),
 
 	TP_fast_assign(
-		__assign_str(group_name);
+		__assign_str(group_name, dev_name(domain->dev));
 	),
 
 	TP_printk("group=%s",
@@ -65,7 +65,7 @@ DECLARE_EVENT_CLASS(iommu_pgtable,
 	),
 
 	TP_fast_assign(
-		__assign_str(group_name);
+		__assign_str(group_name, dev_name(domain->dev));
 		__entry->iova = iova;
 		__entry->ipa = ipa;
 		__entry->granule = granule;
@@ -108,7 +108,7 @@ DECLARE_EVENT_CLASS(iommu_map_pages,
 	),
 
 	TP_fast_assign(
-		__assign_str(group_name);
+		__assign_str(group_name, dev_name(domain->dev));
 		__entry->iova = iova;
 		__entry->pgsize = pgsize;
 		__entry->pgcount = pgcount;
@@ -164,7 +164,7 @@ TRACE_EVENT(tlbsync_timeout,
 	),
 
 	TP_fast_assign(
-		__assign_str(device);
+		__assign_str(device, dev_name(dev));
 	),
 
 	TP_printk("smmu=%s",
@@ -191,7 +191,7 @@ TRACE_EVENT(smmu_init,
 #endif /* _TRACE_ARM_SMMU_H */
 
 #undef TRACE_INCLUDE_PATH
-#define TRACE_INCLUDE_PATH ../../drivers/iommu/arm/arm-smmu
+#define TRACE_INCLUDE_PATH .
 
 #undef TRACE_INCLUDE_FILE
 #define TRACE_INCLUDE_FILE arm-smmu-trace

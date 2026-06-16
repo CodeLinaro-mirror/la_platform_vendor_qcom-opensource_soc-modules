@@ -490,7 +490,8 @@ EXPORT_SYMBOL(virthab_queue_inbufs);
 int virthab_init_vqs_pre(struct virtio_hab *vh)
 {
 	struct vq_pchan *vpchans = vh->vqpchans;
-	struct virtqueue_info *vqs_info = vh->vqs_info;
+	vq_callback **callbacks = vh->vq_callbacks;
+	const char **names = (const char **)vh->vq_names;
 	char *temp;
 	int i, idx = 0;
 	struct hab_device *habdev = NULL;
@@ -522,17 +523,17 @@ int virthab_init_vqs_pre(struct virtio_hab *vh)
 		habdev = &hab_driver.devp[idx + i];
 
 		/* ToDo: each cb should only apply to one vq */
-		vqs_info[i * HAB_PCHAN_VQ_MAX + HAB_PCHAN_TX_VQ].callback = virthab_recv_txq;
-		vqs_info[i * HAB_PCHAN_VQ_MAX + HAB_PCHAN_RX_VQ].callback = virthab_recv_rxq_task;
+		callbacks[i * HAB_PCHAN_VQ_MAX + HAB_PCHAN_TX_VQ] = virthab_recv_txq;
+		callbacks[i * HAB_PCHAN_VQ_MAX + HAB_PCHAN_RX_VQ] = virthab_recv_rxq_task;
 
-		strscpy((char *)vqs_info[i * HAB_PCHAN_VQ_MAX + HAB_PCHAN_TX_VQ].name,
+		strscpy((char *)names[i * HAB_PCHAN_VQ_MAX + HAB_PCHAN_TX_VQ],
 				habdev->name, sizeof(habdev->name));
-		temp = (char *)vqs_info[i * HAB_PCHAN_VQ_MAX + HAB_PCHAN_TX_VQ].name;
+		temp = (char *)names[i * HAB_PCHAN_VQ_MAX + HAB_PCHAN_TX_VQ];
 		temp[0] = 't'; temp[1] = 'x'; temp[2] = 'q';
 
-		strscpy((char *)vqs_info[i * HAB_PCHAN_VQ_MAX + HAB_PCHAN_RX_VQ].name,
+		strscpy((char *)names[i * HAB_PCHAN_VQ_MAX + HAB_PCHAN_RX_VQ],
 				habdev->name, sizeof(habdev->name));
-		temp = (char *)vqs_info[i * HAB_PCHAN_VQ_MAX + HAB_PCHAN_RX_VQ].name;
+		temp = (char *)names[i * HAB_PCHAN_VQ_MAX + HAB_PCHAN_RX_VQ];
 		temp[0] = 'r'; temp[1] = 'x'; temp[2] = 'q';
 
 		vpchans[i].mmid = habdev->id;
@@ -604,7 +605,9 @@ static int virthab_init_vqs(struct virtio_hab *vh)
 		vh->mmid_range * HAB_PCHAN_VQ_MAX);
 
 	ret = virtio_find_vqs(vh->vdev, vh->mmid_range * HAB_PCHAN_VQ_MAX,
-				vh->vqs, vh->vqs_info, NULL);
+				vh->vqs,
+				(vq_callback_t **)vh->vq_callbacks,
+				(const char * const *)vh->vq_names, NULL);
 
 	if (ret) {
 		pr_err("failed to find vqs %d\n", ret);
@@ -631,10 +634,14 @@ static int virthab_alloc_mmid_device(struct virtio_hab *vh,
 	if (!vh->vqs)
 		return -ENOMEM;
 
-	vh->vqs_info = kzalloc(sizeof(struct virtqueue_info) * mmid_range *
+	vh->vq_callbacks = kzalloc(sizeof(vq_callback *) * mmid_range *
 				HAB_PCHAN_VQ_MAX, GFP_KERNEL);
+	if (!vh->vq_callbacks)
+		return -ENOMEM;
 
-	if (!vh->vqs_info)
+	vh->vq_names = kzalloc(sizeof(char *) * mmid_range *
+				HAB_PCHAN_VQ_MAX, GFP_KERNEL);
+	if (!vh->vq_names)
 		return -ENOMEM;
 
 	vh->vqpchans = kcalloc(hab_driver.ndevices, sizeof(struct vq_pchan),
@@ -644,8 +651,8 @@ static int virthab_alloc_mmid_device(struct virtio_hab *vh,
 
 	/* loop through all pchans before vq registration for name creation */
 	for (i = 0; i < mmid_range * HAB_PCHAN_VQ_MAX; i++) {
-		vh->vqs_info[i].name = kzalloc(MAX_VMID_NAME_SIZE + 2, GFP_KERNEL);
-		if (!vh->vqs_info[i].name)
+		vh->vq_names[i] = kzalloc(MAX_VMID_NAME_SIZE + 2, GFP_KERNEL);
+		if (!vh->vq_names[i])
 			return -ENOMEM;
 	}
 
@@ -954,8 +961,9 @@ static void virthab_remove(struct virtio_device *vdev)
 	kfree(vh->vqs);
 
 	for (i = 0; i < vh->mmid_range * HAB_PCHAN_VQ_MAX; i++)
-		kfree(vh->vqs_info[i].name);
-	kfree(vh->vqs_info);
+		kfree(vh->vq_names[i]);
+	kfree(vh->vq_names);
+	kfree(vh->vq_callbacks);
 
 	kfree(vh->vqpchans);
 

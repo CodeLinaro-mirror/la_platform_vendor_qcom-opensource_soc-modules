@@ -1804,6 +1804,15 @@ static struct iommu_domain *arm_smmu_domain_alloc_paging(struct device *dev)
 	return &smmu_domain->domain;
 }
 
+/* Adapter for kernel 6.6 domain_alloc(type) API */
+static struct iommu_domain *arm_smmu_domain_alloc(unsigned type)
+{
+	if (type != IOMMU_DOMAIN_UNMANAGED && type != IOMMU_DOMAIN_DMA &&
+	    type != IOMMU_DOMAIN_IDENTITY)
+		return NULL;
+	return arm_smmu_domain_alloc_paging(NULL);
+}
+
 static void arm_smmu_domain_free(struct iommu_domain *domain)
 {
 	struct arm_smmu_domain *smmu_domain = to_smmu_domain(domain);
@@ -3198,10 +3207,8 @@ static struct qcom_iommu_ops arm_smmu_ops = {
 	},
 
 	.iommu_ops = {
-		.identity_domain	= &arm_smmu_identity_domain,
-		.blocked_domain		= &arm_smmu_blocked_domain,
 		.capable		= arm_smmu_capable,
-		.domain_alloc_paging		= arm_smmu_domain_alloc_paging,
+		.domain_alloc		= arm_smmu_domain_alloc,
 		.probe_device		= arm_smmu_probe_device,
 		.release_device		= arm_smmu_release_device,
 		.probe_finalize		= arm_smmu_probe_finalize,

@@ -63,7 +63,8 @@ struct virtio_hab {
 	 */
 	int vqs_offset;
 	struct virtqueue **vqs; /* holds total # of vqs for all the pchans. 2 vqs per pchan */
-	struct virtqueue_info *vqs_info;
+	vq_callback **vq_callbacks; /* callbacks array for virtio_find_vqs */
+	const char **vq_names;      /* names array for virtio_find_vqs */
 	struct vq_pchan *vqpchans; /* total # of pchans */
 
 	spinlock_t mlock; /* master lock for all the pchans */
@@ -119,28 +120,28 @@ int virthab_init_vqs_post(struct virtio_hab *vh);
 
 struct virtio_device *virthab_get_vdev(int32_t mmid);
 #else
-int virthab_queue_inbufs(struct virtio_hab *vh, int alloc)
+static inline int virthab_queue_inbufs(struct virtio_hab *vh, int alloc)
 {
 	return -ENODEV;
 }
 
-int virthab_alloc(struct virtio_device *vdev, struct virtio_hab **pvh,
+static inline int virthab_alloc(struct virtio_device *vdev, struct virtio_hab **pvh,
 			uint32_t mmid_start, int mmid_range)
 {
 	return -ENODEV;
 }
 
-int virthab_init_vqs_pre(struct virtio_hab *vh)
+static inline int virthab_init_vqs_pre(struct virtio_hab *vh)
 {
 	return -ENODEV;
 }
 
-int virthab_init_vqs_post(struct virtio_hab *vh)
+static inline int virthab_init_vqs_post(struct virtio_hab *vh)
 {
 	return -ENODEV;
 }
 
-struct virtio_device *virthab_get_vdev(int32_t mmid)
+static inline struct virtio_device *virthab_get_vdev(int32_t mmid)
 {
 	return NULL;
 }

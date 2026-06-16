@@ -19,7 +19,9 @@
 #include <linux/dma-mapping.h>
 #include <linux/qcom-iommu-util.h>
 #include <linux/qcom-io-pgtable.h>
-#include "drivers/iommu/iommu-pages.h"
+/* iommu-pages.h not available in kernel 6.6, use standard page alloc */
+#define __iommu_alloc_pages(gfp, order)  alloc_pages(gfp, order)
+#define __iommu_free_pages(page, order)  __free_pages(page, order)
 
 #define AV8L_FAST_MAX_ADDR_BITS		48
 

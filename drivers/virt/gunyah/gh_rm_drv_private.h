@@ -16,9 +16,11 @@
 #include "drivers/virt/gunyah/rsc_mgr.h"
 
 extern bool gh_rm_core_initialized;
-extern struct gunyah_rm *rm;
+extern struct gh_rm *rm;
 
-#define gh_rm_call gunyah_rm_call
+/* gh_rm_call is exported by CSE kernel rsc_mgr.c */
+#define gunyah_rm_notifier_register    gh_rm_notifier_register
+#define gunyah_rm_notifier_unregister  gh_rm_notifier_unregister
 
 /* Resource Manager Header */
 struct gh_rm_rpc_hdr {

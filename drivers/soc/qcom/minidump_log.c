@@ -45,7 +45,7 @@
 #include <asm/memory.h>
 
 #include <linux/sched/cputime.h>
-#include "kernel/sched/sched.h"
+#include <kernel/sched/sched.h>
 #include <linux/sched/walt.h>
 
 #include <linux/kdebug.h>
@@ -58,13 +58,17 @@
 #include <linux/cma.h>
 #include <linux/dma-map-ops.h>
 #include <linux/sched/clock.h>
+#if IS_ENABLED(CONFIG_ANDROID_VENDOR_HOOKS)
 #include <trace/hooks/cpufreq.h>
+#endif
 #ifdef CONFIG_QCOM_MINIDUMP_PANIC_CPU_CONTEXT
 #include <trace/hooks/debug.h>
 #endif
+#ifdef CONFIG_QCOM_MINIDUMP_PANIC_MEMORY_INFO
 #include "minidump_memory.h"
 #endif
-#include "kernel/time/tick-internal.h"
+#endif /* CONFIG_QCOM_MINIDUMP_PANIC_DUMP */
+#include <kernel/time/tick-internal.h>
 
 #ifdef CONFIG_QCOM_DYN_MINIDUMP_STACK
 
@@ -99,7 +103,9 @@ static struct md_suspend_context_data md_suspend_context;
 static bool is_vmap_stack __read_mostly;
 
 #ifdef CONFIG_QCOM_MINIDUMP_FTRACE
+#if IS_ENABLED(CONFIG_ANDROID_VENDOR_HOOKS)
 #include <trace/hooks/ftrace_dump.h>
+#endif
 #include <linux/ring_buffer.h>
 #include <linux/trace_seq.h>
 
@@ -1244,7 +1250,9 @@ dump_rq:
 #ifdef CONFIG_QCOM_MINIDUMP_PANIC_KTASK_STACK
 	md_dump_ktask_stack();
 #endif
+#ifdef CONFIG_QCOM_MINIDUMP_PANIC_MEMORY_INFO
 	md_dump_memory();
+#endif
 	dump_stack_minidump(0);
 	md_in_oops_handler = false;
 }
@@ -1319,11 +1327,13 @@ static void md_register_panic_data(void)
 {
 	int ret;
 
+#ifdef CONFIG_QCOM_MINIDUMP_PANIC_MEMORY_INFO
 	ret = md_minidump_memory_init();
 	if (ret) {
 		pr_err("Failed to look up all minidump memory symbols, rc: %d\n", ret);
 		return;
 	}
+#endif
 
 #ifdef CONFIG_QCOM_MINIDUMP_PANIC_CPU_CONTEXT
 	md_register_panic_entries(MD_CPU_CNTXT_PAGES, "KCNTXT",
@@ -1512,9 +1522,11 @@ static void register_cpufreq_log(void)
 	if (msm_minidump_add_region(&md_entry) < 0)
 		pr_err("Failed to add %s in Minidump\n", md_entry.name);
 
+#if IS_ENABLED(CONFIG_ANDROID_VENDOR_HOOKS)
 	register_trace_android_vh_cpufreq_resolve_freq(log_cpu_freq, NULL);
 	register_trace_android_vh_cpufreq_fast_switch(log_cpu_freq, NULL);
 	register_trace_android_vh_cpufreq_target(log_cpu_freq, NULL);
+#endif
 }
 #else
 static inline void register_cpufreq_log(void) {}

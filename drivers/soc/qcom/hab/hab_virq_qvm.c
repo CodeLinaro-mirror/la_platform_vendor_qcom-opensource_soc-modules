@@ -66,7 +66,7 @@ static irqreturn_t virt_irq_handler(int irq, void *priv)
 		return IRQ_NONE;
 	}
 	if (dbl->efd)
-		eventfd_signal(dbl->efd);
+		eventfd_signal(dbl->efd, 1);
 
 	dbl->virq_recv++;
 	/* to deassert interrupt status */

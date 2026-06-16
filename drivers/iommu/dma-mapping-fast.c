@@ -17,7 +17,9 @@
 #include <linux/iova.h>
 #include <linux/io-pgtable.h>
 #include <linux/qcom-iommu-util.h>
+#if IS_ENABLED(CONFIG_ANDROID_VENDOR_HOOKS)
 #include <trace/hooks/iommu.h>
+#endif
 #include "qcom-dma-iommu-generic.h"
 
 /* some redundant definitions... :( TODO: move to io-pgtable-fast.h */
@@ -1110,7 +1112,6 @@ EXPORT_SYMBOL(fast_smmu_setup_dma_ops);
 
 int __init dma_mapping_fast_init(void)
 {
-	return register_trace_android_rvh_iommu_setup_dma_ops(
-			__fast_smmu_setup_dma_ops, NULL);
+	return 0;
 }
 
