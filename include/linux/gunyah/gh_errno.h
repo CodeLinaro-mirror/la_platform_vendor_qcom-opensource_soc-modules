@@ -9,36 +9,7 @@
 #define __GH_ERRNO_H
 
 #include <linux/errno.h>
-
-#define GH_ERROR_OK			0
-#define GH_ERROR_UNIMPLEMENTED		-1
-#define GH_ERROR_RETRY			-2
-
-#define GH_ERROR_ARG_INVAL		1
-#define GH_ERROR_ARG_SIZE		2
-#define GH_ERROR_ARG_ALIGN		3
-
-#define GH_ERROR_NOMEM			10
-
-#define GH_ERROR_ADDR_OVFL		20
-#define	GH_ERROR_ADDR_UNFL		21
-#define GH_ERROR_ADDR_INVAL		22
-
-#define GH_ERROR_DENIED			30
-#define GH_ERROR_BUSY			31
-#define GH_ERROR_IDLE			32
-
-#define GH_ERROR_IRQ_BOUND		40
-#define GH_ERROR_IRQ_UNBOUND		41
-
-#define GH_ERROR_CSPACE_CAP_NULL	50
-#define GH_ERROR_CSPACE_CAP_REVOKED	51
-#define GH_ERROR_CSPACE_WRONG_OBJ_TYPE	52
-#define GH_ERROR_CSPACE_INSUF_RIGHTS	53
-#define GH_ERROR_CSPACE_FULL		54
-
-#define GH_ERROR_MSGQUEUE_EMPTY		60
-#define GH_ERROR_MSGQUEUE_FULL		61
+#include <linux/gunyah.h>
 
 static inline int gh_remap_error(int gh_error)
 {

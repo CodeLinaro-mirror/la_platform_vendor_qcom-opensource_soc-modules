@@ -77,7 +77,7 @@ static void gh_dbl_recv_cb(int irq, void *data)
 	spin_lock_irq(&dbl->dbl_lock);
 	if (dbl->efd != NULL) {
 		pr_info("fd is %d for id %d lbl %d\n", dbl->fd, dbl->id, dbl->virtirq_label);
-		eventfd_signal(dbl->efd);
+		eventfd_signal(dbl->efd, 1);
 	}
 	dbl->virq_recv++;
 	spin_unlock_irq(&dbl->dbl_lock);

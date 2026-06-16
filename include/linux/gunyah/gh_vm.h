@@ -6,7 +6,9 @@
 #ifndef _GH_VM_H
 #define _GH_VM_H
 
+#ifdef CONFIG_QTVM_WITH_AVF
 #include <linux/gunyah_qtvm.h>
+#endif
 
 #ifdef CONFIG_QTVM_WITH_AVF
 #define GH_VM_BEFORE_POWERUP		GUNYAH_QTVM_BEFORE_POWERUP

@@ -103,7 +103,7 @@ SRCU_NOTIFIER_HEAD_STATIC(gh_rm_notifier);
 
 /* non-static: used by gh_rm_iface */
 bool gh_rm_core_initialized;
-struct gunyah_rm *rm;
+struct gh_rm *rm;
 
 static void gh_rm_get_svm_res_work_fn(struct work_struct *work);
 static DECLARE_WORK(gh_rm_get_svm_res_work, gh_rm_get_svm_res_work_fn);
@@ -1239,9 +1239,9 @@ static int gh_vm_probe(struct device *dev, struct device_node *hyp_root)
 
 	gh_init_vm_prop_table();
 
-	node = of_find_compatible_node(hyp_root, NULL, "qcom,gunyah-vm-id-1.0");
+	node = of_get_compatible_child(hyp_root, "qcom,gunyah-vm-id-1.0");
 	if (IS_ERR_OR_NULL(node)) {
-		node = of_find_compatible_node(hyp_root, NULL, "qcom,haven-vm-id-1.0");
+		node = of_get_compatible_child(hyp_root, "qcom,haven-vm-id-1.0");
 		if (IS_ERR_OR_NULL(node)) {
 			dev_err(dev, "Could not find vm-id node\n");
 			return -ENODEV;

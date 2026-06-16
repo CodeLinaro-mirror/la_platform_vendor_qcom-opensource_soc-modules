@@ -2947,69 +2947,9 @@ static int __gh_rm_setup_feature_scm_assign(void)
 	return 0;
 }
 #else
-static struct notifier_block gh_rm_scm_assign_nb;
-static struct notifier_block gh_rm_hyp_assign_nb;
-
 static int __gh_rm_setup_feature_scm_assign(void)
 {
-	int ret, gh_acl_sz, gh_sgl_sz;
-	int vmid = 0;
-	gh_vmid_t self_vmid;
-	struct page *page;
-	struct gh_acl_desc *gh_acl;
-	struct gh_sgl_desc *gh_sgl;
-	gh_memparcel_handle_t handle;
-
-	ret = gh_rm_get_this_vmid(&self_vmid);
-	if (ret)
-		return ret;
-
-	if (self_vmid != QCOM_SCM_VMID_HLOS) {
-		gh_feature_use_scm_assign = false;
-		return 0;
-	}
-
-	page = alloc_page(GFP_KERNEL);
-	if (!page)
-		return -ENOMEM;
-
-	gh_acl_sz = sizeof(*gh_acl) + offsetof(struct gh_acl_desc, acl_entries[1]);
-	gh_sgl_sz = sizeof(*gh_sgl) + offsetof(struct gh_sgl_desc, sgl_entries[1]);
-	gh_acl = kzalloc(gh_acl_sz + gh_sgl_sz, GFP_KERNEL);
-	gh_sgl = (void *)gh_acl + gh_acl_sz;
-	if (!gh_acl) {
-		__free_page(page);
-		return -ENOMEM;
-	}
-
-	ret = gh_rm_vm_alloc_vmid(GH_TRUSTED_VM, &vmid);
-	if (ret) {
-		kfree(gh_acl);
-		__free_page(page);
-		return -ENOMEM;
-	}
-
-	gh_acl->n_acl_entries = 1;
-	gh_acl->acl_entries[0].vmid = vmid;
-	gh_acl->acl_entries[0].perms = GH_RM_ACL_R | GH_RM_ACL_W;
-
-	gh_sgl->n_sgl_entries = 1;
-	gh_sgl->sgl_entries[0].ipa_base = page_to_phys(page);
-	gh_sgl->sgl_entries[0].size = PAGE_SIZE;
-
-	ret = ghd_rm_mem_lend(GH_RM_MEM_TYPE_NORMAL, 0, 0, gh_acl, gh_sgl, NULL, &handle);
-	if (ret) {
-		gh_feature_use_scm_assign = true;
-	} else {
-		gh_feature_use_scm_assign = false;
-		qcom_scm_assign_mem_notifier_register(&gh_rm_scm_assign_nb);
-		hyp_assign_notifier_register(&gh_rm_hyp_assign_nb);
-	}
-
-	if (ret || !ghd_rm_mem_reclaim(handle, 0))
-		__free_page(page);
-	gh_rm_vm_dealloc_vmid(vmid);
-	kfree(gh_acl);
+	gh_feature_use_scm_assign = true;
 	return 0;
 }
 #endif
@@ -3033,6 +2973,7 @@ int gh_rm_setup_feature_scm_assign(void)
 }
 
 #define QCOM_SCM_MAX_MANAGED_VMID 0x3F
+#if 0 /* Not needed for CSE kernel - no SCM assign notifier support */
 static bool is_gh_vm_or_hlos(int vmid)
 {
 	if (vmid > QCOM_SCM_MAX_MANAGED_VMID)
@@ -3141,3 +3082,4 @@ static int hyp_assign_notifier(struct notifier_block *nb,
 static struct notifier_block gh_rm_hyp_assign_nb = {
 	.notifier_call = hyp_assign_notifier,
 };
+#endif /* !CONFIG_GUNYAH_LEGACY */

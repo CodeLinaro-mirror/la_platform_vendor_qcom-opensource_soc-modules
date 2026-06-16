@@ -9,7 +9,11 @@
 #include <linux/firmware/qcom/qcom_scm.h>
 
 #include <soc/qcom/secure_buffer.h>
-#include "drivers/iommu/iommu-pages.h"
+#include <linux/mm.h>
+
+/* iommu-pages.h not available in kernel 6.6, use standard page alloc */
+#define __iommu_alloc_pages(gfp, order)  alloc_pages(gfp, order)
+#define __iommu_free_pages(page, order)  __free_pages(page, order)
 
 struct io_pgtable_pool {
 	u32 vmid;
@@ -308,23 +312,21 @@ static unsigned long io_pgtable_alloc_scan_objects(struct shrinker *shrinker,
 
 static struct shrinker *io_pgtable_alloc_shrinker;
 
+/* Kernel 6.6 uses static shrinker with register_shrinker */
+static struct shrinker io_pgtable_alloc_shrinker_static = {
+	.seeks = DEFAULT_SEEKS,
+};
+
 int qcom_io_pgtable_alloc_init(void)
 {
-	io_pgtable_alloc_shrinker = shrinker_alloc(0, "io_pgtable_alloc");
-	if (!io_pgtable_alloc_shrinker)
-		return -ENOMEM;
+	io_pgtable_alloc_shrinker_static.count_objects = io_pgtable_alloc_count_objects;
+	io_pgtable_alloc_shrinker_static.scan_objects = io_pgtable_alloc_scan_objects;
+	io_pgtable_alloc_shrinker = &io_pgtable_alloc_shrinker_static;
 
-	io_pgtable_alloc_shrinker->count_objects = io_pgtable_alloc_count_objects;
-	io_pgtable_alloc_shrinker->scan_objects = io_pgtable_alloc_scan_objects;
-
-	io_pgtable_alloc_shrinker->seeks = DEFAULT_SEEKS;
-
-	shrinker_register(io_pgtable_alloc_shrinker);
-
-	return 0;
+	return register_shrinker(io_pgtable_alloc_shrinker, "io_pgtable_alloc");
 }
 
 void qcom_io_pgtable_alloc_exit(void)
 {
-	shrinker_free(io_pgtable_alloc_shrinker);
+	unregister_shrinker(io_pgtable_alloc_shrinker);
 }

@@ -22,7 +22,7 @@
 #include <linux/firmware/qcom/qcom_scm.h>
 #include <soc/qcom/minidump.h>
 #include <soc/qcom/watchdog.h>
-#include <soc/qcom/qcom_sdei.h>
+#include <linux/soc/qcom/qcom_sdei.h>
 #include <linux/cpumask.h>
 #include <linux/cpu_pm.h>
 #include <uapi/linux/sched/types.h>

@@ -28,8 +28,7 @@
 #define GH_RM_NOTIF_MEM_RELEASED	0x51100012
 #define GH_RM_NOTIF_MEM_ACCEPTED	0x51100013
 
-#define GH_RM_MEM_TYPE_NORMAL	0
-#define GH_RM_MEM_TYPE_IO	1
+/* GH_RM_MEM_TYPE_NORMAL and GH_RM_MEM_TYPE_IO are defined as enums in gunyah_rsc_mgr.h */
 
 #define GH_RM_TRANS_TYPE_DONATE	0
 #define GH_RM_TRANS_TYPE_LEND	1
@@ -184,18 +183,7 @@ struct gh_notify_vmid_desc {
 /* AUTH_PARAM_TYPE mechanisms */
 #define GH_VM_AUTH_PARAM_PAS_ID		0 /* Used to pass peripheral auth id */
 
-#define GH_RM_VM_STATUS_NO_STATE	0
-#define GH_RM_VM_STATUS_INIT		1
-#define GH_RM_VM_STATUS_READY		2
-#define GH_RM_VM_STATUS_RUNNING		3
-#define GH_RM_VM_STATUS_PAUSED		4
-#define GH_RM_VM_STATUS_LOAD		5
-#define GH_RM_VM_STATUS_AUTH		6
-/* 7 is reserved */
-#define GH_RM_VM_STATUS_INIT_FAILED	8
-#define GH_RM_VM_STATUS_EXITED		9
-#define GH_RM_VM_STATUS_RESETTING	10
-#define GH_RM_VM_STATUS_RESET		11
+/* GH_RM_VM_STATUS_* are defined as enums in gunyah_rsc_mgr.h */
 #define GH_RM_VM_STATUS_RESET_FAILED	12
 
 #define GH_RM_OS_STATUS_NONE		0

@@ -161,7 +161,7 @@ static int __init init_watchdog(void)
 #if IS_MODULE(CONFIG_QCOM_SOC_WATCHDOG)
 module_init(init_watchdog);
 #else
-pure_initcall(init_watchdog);
+module_init(init_watchdog);
 #endif
 
 static __exit void exit_watchdog(void)

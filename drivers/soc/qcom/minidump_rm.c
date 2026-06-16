@@ -23,8 +23,6 @@
 #include "minidump_private.h"
 #include "elf.h"
 
-/* Protect elfheader and smem table from deferred calls contention */
-static DEFINE_RWLOCK(mdt_remove_lock);
 struct workqueue_struct *minidump_rm_wq;
 
 static inline int md_elf_entry_number(const struct md_region *entry)
@@ -87,7 +85,7 @@ static void md_rm_update_work(struct md_region *entry)
 		return;
 	}
 
-	spin_lock_irqsave(&mdt_lock, flags);
+	raw_spin_lock_irqsave(&mdt_lock, flags);
 	entryno = md_elf_entry_number(entry);
 	if (entryno < 0) {
 		printk_deferred(
@@ -95,7 +93,7 @@ static void md_rm_update_work(struct md_region *entry)
 			entry->name);
 		md_rm_update_elf_header(entryno, entry);
 	}
-	spin_unlock_irqrestore(&mdt_lock, flags);
+	raw_spin_unlock_irqrestore(&mdt_lock, flags);
 }
 
 static void md_rm_add_work(struct md_region *entry)
@@ -106,7 +104,7 @@ static void md_rm_add_work(struct md_region *entry)
 	slot_num =
 		gh_rm_minidump_register_range(entry->phys_addr, entry->size,
 					      entry->name, strlen(entry->name));
-	spin_lock_irqsave(&mdt_lock, flags);
+	raw_spin_lock_irqsave(&mdt_lock, flags);
 	if (slot_num < 0) {
 		md_num_regions--;
 		pr_err("Failed to register minidump entry:%s ret:%d\n",
@@ -114,7 +112,7 @@ static void md_rm_add_work(struct md_region *entry)
 		msm_minidump_clear_headers(entry);
 	}
 
-	spin_unlock_irqrestore(&mdt_lock, flags);
+	raw_spin_unlock_irqrestore(&mdt_lock, flags);
 }
 
 static void md_rm_remove_work(struct md_region *entry)
@@ -257,13 +255,13 @@ static int md_rm_add_pending_entry(struct list_head *pending_list)
 	unsigned long flags;
 
 	/* Add pending entries to HLOS TOC */
-	spin_lock_irqsave(&mdt_lock, flags);
+	raw_spin_lock_irqsave(&mdt_lock, flags);
 
 	region_number = 0;
 	list_for_each_entry_safe(pending_region, tmp, pending_list, list) {
 		rm_region = kzalloc(sizeof(*rm_region), GFP_ATOMIC);
 		if (!rm_region) {
-			spin_unlock_irqrestore(&mdt_lock, flags);
+			raw_spin_unlock_irqrestore(&mdt_lock, flags);
 			return -ENOMEM;
 		}
 		rm_region->entry = pending_region->entry;
@@ -275,7 +273,7 @@ static int md_rm_add_pending_entry(struct list_head *pending_list)
 		kfree(pending_region);
 		region_number++;
 	}
-	spin_unlock_irqrestore(&mdt_lock, flags);
+	raw_spin_unlock_irqrestore(&mdt_lock, flags);
 
 	return 0;
 }
@@ -299,13 +297,11 @@ static int md_rm_remove_md_region(const struct md_region *entry)
 	int ret;
 	unsigned long flags;
 
-	spin_lock_irqsave(&mdt_lock, flags);
-	write_lock(&mdt_remove_lock);
+	raw_spin_lock_irqsave(&mdt_lock, flags);
 
 	ret = md_rm_remove_region(entry);
 
-	write_unlock(&mdt_remove_lock);
-	spin_unlock_irqrestore(&mdt_lock, flags);
+	raw_spin_unlock_irqrestore(&mdt_lock, flags);
 
 	return ret;
 }
@@ -315,7 +311,7 @@ static int md_rm_add_md_region(const struct md_region *entry)
 	int ret = 0;
 	unsigned long flags;
 
-	spin_lock_irqsave(&mdt_lock, flags);
+	raw_spin_lock_irqsave(&mdt_lock, flags);
 
 	if (md_num_regions >= MAX_NUM_ENTRIES) {
 		printk_deferred("Maximum entries reached\n");
@@ -338,7 +334,7 @@ static int md_rm_add_md_region(const struct md_region *entry)
 	md_num_regions++;
 
 out:
-	spin_unlock_irqrestore(&mdt_lock, flags);
+	raw_spin_unlock_irqrestore(&mdt_lock, flags);
 
 	return ret;
 }
@@ -348,11 +344,11 @@ static int md_rm_update_region(int regno, const struct md_region *entry)
 	int ret = 0;
 	unsigned long flags;
 
-	read_lock_irqsave(&mdt_remove_lock, flags);
+	raw_spin_lock_irqsave(&mdt_lock, flags);
 
 	ret = md_rm_update(regno, entry);
 
-	read_unlock_irqrestore(&mdt_remove_lock, flags);
+	raw_spin_unlock_irqrestore(&mdt_lock, flags);
 
 	return ret;
 }
