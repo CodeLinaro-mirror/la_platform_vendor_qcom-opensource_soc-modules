@@ -7,6 +7,7 @@
 #include <dt-bindings/arm/msm/qcom_dma_heap_dt_constants.h>
 #include <dt-bindings/mailbox/qcom-ipcc.h>
 #include <dt-bindings/soc/qcom,ipcc.h>
+#include <dt-bindings/mailbox/qcom-ipcc-sa8797p.h>
 
 / {
 	#address-cells = <0x2>;
@@ -1030,12 +1031,12 @@
 				};
 			};
 
-			/* reserved 0 */
+			/* glink */
 			virtio-mmio@42 {
 				vdevice-type = "virtio-mmio";
-				generate = "/virtio-mmio";
+				patch = "/soc/virtio-glink-cma@2e000000";
 				peer-default;
-				vqs-num = <0x2>;
+				vqs-num = <0x1>;
 				push-compatible = "virtio,mmio";
 				sync-reset;
 				dma-coherent;
@@ -1056,7 +1057,7 @@
 				push-compatible = "virtio,mmio";
 				sync-reset;
 				dma-coherent;
-				dma_base = <0x0 0x278000>;
+				dma_base = <0x0 0x272000>;
 				memory {
 					qcom,label = <0x12B>;
 					#address-cells = <0x2>;
@@ -1281,6 +1282,43 @@
 		interrupt-controller;
 		#interrupt-cells = <3>;
 		#mbox-cells = <2>;
+	};
+
+	virtio_glink_cma: virtio-glink-cma@2e000000 {
+		glink_bridge: virtio-glink-bridge {
+			compatible = "virtio,device49162";
+			remoteproc_cdsp_glink: glink-edge {
+				interrupt-parent = <&ipcc_mproc_apps_ns2>;
+				interrupts = <IPCC_MPROC_NSP0 0 IRQ_TYPE_EDGE_RISING>;
+				mboxes = <&ipcc_mproc_apps_ns2 IPCC_MPROC_NSP0 0>;
+				label = "cdsp";
+				qcom,glink-label = "cdsp";
+			};
+
+			remoteproc_cdsp1_glink: glink-edge1 {
+				interrupt-parent = <&ipcc_mproc_apps_ns2>;
+				interrupts = <IPCC_MPROC_NSP1 0 IRQ_TYPE_EDGE_RISING>;
+				mboxes = <&ipcc_mproc_apps_ns2 IPCC_MPROC_NSP1 0>;
+				label = "cdsp1";
+				qcom,glink-label = "cdsp1";
+			};
+
+			remoteproc_cdsp2_glink: glink-edge2 {
+				interrupt-parent = <&ipcc_mproc_apps_ns2>;
+				interrupts = <IPCC_MPROC_NSP2 0 IRQ_TYPE_EDGE_RISING>;
+				mboxes = <&ipcc_mproc_apps_ns2 IPCC_MPROC_NSP2 0>;
+				label = "cdsp2";
+				qcom,glink-label = "cdsp2";
+			};
+
+			remoteproc_cdsp3_glink: glink-edge3 {
+				interrupt-parent = <&ipcc_mproc_apps_ns2>;
+				interrupts = <IPCC_MPROC_NSP3 0 IRQ_TYPE_EDGE_RISING>;
+				mboxes = <&ipcc_mproc_apps_ns2 IPCC_MPROC_NSP3 0>;
+				label = "cdsp3";
+				qcom,glink-label = "cdsp3";
+			};
+		};
 	};
 
 	qcom,mem-buf {
