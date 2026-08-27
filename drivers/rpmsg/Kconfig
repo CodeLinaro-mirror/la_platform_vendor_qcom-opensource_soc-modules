@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: GPL-2.0
+
+menu "Rpmsg drivers"
+
+# RPMSG always gets selected by whoever wants it
+config RPMSG_QCOM_GLINK
+	tristate
+	select RPMSG
+
+config RPMSG_QCOM_GLINK_CMA
+        tristate "Qualcomm Technologies, Inc. CMA Glink driver"
+        select RPMSG_QCOM_GLINK
+        depends on MAILBOX
+        help
+          Say y here to enable support for the GLINK CMA communication driver.
+          This provides support for using the GLINK communication protocol over
+          share CMA region and IPC signaling. Enables communication channels
+          to remote processors.
+endmenu
