@@ -1460,7 +1460,7 @@
 		compatible = "qcom,sa8797p-ethqos", "snps,dwxgmac";
 		reg = <0x1a80000 0x14000>,
 			<0x1aff000 0x1000>;
-		qcom,iommu-dma = "bypass";
+		qcom,iommu-dma = "fastmap";
 		reg-names = "stmmaceth", "rgmii";
 
 		interrupts = <GIC_SPI 820 IRQ_TYPE_LEVEL_HIGH>;

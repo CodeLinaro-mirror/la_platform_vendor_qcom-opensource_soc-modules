@@ -2818,6 +2818,9 @@ static void arm_smmu_probe_finalize(struct device *dev)
 
 	if (smmu->impl && smmu->impl->probe_finalize)
 		smmu->impl->probe_finalize(smmu, dev);
+
+	/* no-op for non-fastmap devices; needed on kernels without ANDROID_VENDOR_HOOKS */
+	fast_smmu_setup_dma_ops(dev);
 }
 
 static struct iommu_group *arm_smmu_device_group(struct device *dev)
