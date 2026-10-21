@@ -3,3 +3,5 @@ obj-y += drivers/virt/gunyah/
 obj-y += drivers/virtio/
 obj-y += drivers/soc/qcom/
 obj-y += drivers/iommu/
+obj-y += kernel/trace/
+obj-y += drivers/rpmsg/
